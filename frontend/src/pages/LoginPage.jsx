@@ -153,23 +153,46 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Demo Account Credentials Quick Fill */}
-        <div className="p-3.5 rounded-2xl bg-indigo-50/60 border border-indigo-100 space-y-1.5 text-xs text-indigo-900">
-          <div className="flex items-center gap-1.5 font-bold text-indigo-700">
+        {/* Demo Account Credentials Quick Fill (User & Admin) */}
+        <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100 space-y-3 text-xs text-indigo-900">
+          <div className="flex items-center gap-1.5 font-bold text-indigo-700 border-b border-indigo-100/80 pb-2">
             <ShieldCheck className="w-4 h-4 text-indigo-600" />
             <span>Demo Test Credentials</span>
           </div>
-          <p className="text-[11px] text-slate-600">
-            Email: <code className="font-bold text-slate-900">elena@globetrotter.com</code><br />
-            Password: <code className="font-bold text-slate-900">Password123!</code>
-          </p>
-          <button
-            type="button"
-            onClick={() => setFormData({ email: 'elena@globetrotter.com', password: 'Password123!' })}
-            className="text-[11px] font-bold text-indigo-600 hover:underline cursor-pointer"
-          >
-            Auto-fill credentials
-          </button>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px]">
+            {/* Standard User */}
+            <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 space-y-1">
+              <span className="font-extrabold text-slate-800 uppercase text-[9px] px-1.5 py-0.5 rounded bg-slate-100">Standard User</span>
+              <p className="text-slate-600 pt-0.5">
+                Email: <code className="font-bold text-slate-900">elena@globetrotter.com</code><br />
+                Pass: <code className="font-bold text-slate-900">Password123!</code>
+              </p>
+              <button
+                type="button"
+                onClick={() => setFormData({ email: 'elena@globetrotter.com', password: 'Password123!' })}
+                className="text-indigo-600 font-bold hover:underline cursor-pointer pt-0.5 block"
+              >
+                Auto-fill User
+              </button>
+            </div>
+
+            {/* Admin User */}
+            <div className="p-2.5 rounded-xl bg-white border border-purple-200/80 space-y-1">
+              <span className="font-extrabold text-purple-800 uppercase text-[9px] px-1.5 py-0.5 rounded bg-purple-100">Admin Privileges</span>
+              <p className="text-slate-600 pt-0.5">
+                Email: <code className="font-bold text-slate-900">admin@globetrotter.com</code><br />
+                Pass: <code className="font-bold text-slate-900">Password123!</code>
+              </p>
+              <button
+                type="button"
+                onClick={() => setFormData({ email: 'admin@globetrotter.com', password: 'Password123!' })}
+                className="text-purple-700 font-bold hover:underline cursor-pointer pt-0.5 block"
+              >
+                Auto-fill Admin
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Footer Link */}

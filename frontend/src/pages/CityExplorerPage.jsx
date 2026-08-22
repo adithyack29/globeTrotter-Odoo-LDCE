@@ -74,7 +74,7 @@ export default function CityExplorerPage() {
   });
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-8 space-y-8 animate-fade-in">
+    <div className="max-w-6xl mx-auto px-6 py-8 space-y-8 animate-fade-in">
       
       {/* Page Title */}
       <div>
@@ -84,7 +84,7 @@ export default function CityExplorerPage() {
 
       {/* Filter Toolbar */}
       <FilterToolbar
-        searchPlaceholder="Search bar (e.g. Paragliding, Paris, Sushi)......."
+        searchPlaceholder="Search cities, activities, or destinations..."
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
         groupByValue={groupBy}
@@ -95,7 +95,7 @@ export default function CityExplorerPage() {
         onSortByChange={setSortBy}
       />
 
-      {/* Results Itemized List */}
+      {/* Results Itemized Compact Cards */}
       <div className="space-y-4">
         <h2 className="text-lg font-black text-slate-900 border-b border-slate-200 pb-2">Results ({filteredCities.length})</h2>
 
@@ -110,30 +110,32 @@ export default function CityExplorerPage() {
         ) : (
           <div className="space-y-4">
             {filteredCities.map((city) => (
-              <div key={city.id} className="glass-panel p-6 rounded-3xl border border-slate-200 flex flex-col md:flex-row items-center justify-between gap-6 bg-white shadow-xs">
+              <div key={city.id} className="flex items-center gap-6 p-4 bg-white border border-slate-200/80 rounded-2xl shadow-xs hover:border-indigo-200 transition">
                 
-                {/* Option and details */}
-                <div className="flex items-center gap-6 flex-1 w-full">
-                  <img src={city.imageUrl} alt={city.name} className="w-24 h-24 rounded-2xl object-cover border border-slate-200 shrink-0" />
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-xl font-bold text-slate-900">{city.name}</h3>
-                      <span className="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-[10px] font-extrabold">{city.country}</span>
-                      <span className="px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 text-[10px] font-extrabold">★ {city.popularityScore}</span>
-                    </div>
-                    <p className="text-xs text-slate-600 leading-relaxed max-w-2xl">{city.description}</p>
-                    <p className="text-[11px] text-slate-400 font-semibold">{city.activities?.length || 0} Curated Activities • {city.costIndex} Cost Tier</p>
+                {/* 100x100 Cover Image */}
+                <img src={city.imageUrl} alt={city.name} className="w-[100px] h-[100px] rounded-xl object-cover border border-slate-200 shrink-0" />
+
+                {/* Content Details */}
+                <div className="flex-1 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-slate-900">{city.name}</h3>
+                    <span className="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-[10px] font-extrabold">{city.country}</span>
+                    <span className="px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 text-[10px] font-extrabold">★ {city.popularityScore}</span>
                   </div>
+                  <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">{city.description}</p>
+                  <p className="text-[11px] text-slate-400 font-semibold pt-0.5">
+                    {city.activities?.length || 0} Curated Activities · {city.costIndex} Cost Tier
+                  </p>
                 </div>
 
-                {/* Action CTA: Add to Trip */}
-                <div className="shrink-0 w-full md:w-auto">
+                {/* Compact CTA */}
+                <div className="shrink-0">
                   {addingId === city.id ? (
-                    <div className="space-y-2 p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                    <div className="space-y-2 p-3 rounded-2xl bg-slate-50 border border-slate-200 w-48">
                       <select
                         value={targetTripId}
                         onChange={(e) => setTargetTripId(e.target.value)}
-                        className="w-full px-3 py-1.5 rounded-xl bg-white border border-slate-300 text-xs font-bold text-slate-900"
+                        className="w-full px-2 py-1 rounded-xl bg-white border border-slate-300 text-xs font-bold text-slate-900"
                       >
                         {userTrips.map((t) => (
                           <option key={t.id} value={t.id}>{t.title}</option>
@@ -141,13 +143,13 @@ export default function CityExplorerPage() {
                       </select>
                       <div className="flex gap-1 justify-end">
                         <button onClick={() => setAddingId(null)} className="px-2 py-1 text-[10px] text-slate-500">Cancel</button>
-                        <button onClick={() => handleAddStopToTrip(city.id)} className="px-3 py-1 bg-indigo-600 text-white text-[10px] font-bold rounded-lg">Confirm Add</button>
+                        <button onClick={() => handleAddStopToTrip(city.id)} className="px-3 py-1 bg-indigo-600 text-white text-[10px] font-bold rounded-lg">Confirm</button>
                       </div>
                     </div>
                   ) : (
                     <button
                       onClick={() => setAddingId(city.id)}
-                      className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-xs cursor-pointer"
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-xs transition cursor-pointer"
                     >
                       <Plus className="w-4 h-4" />
                       Add to Trip

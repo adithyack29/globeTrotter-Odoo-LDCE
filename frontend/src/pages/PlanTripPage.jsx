@@ -89,7 +89,7 @@ export default function PlanTripPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-8 space-y-8 animate-fade-in">
+    <div className="max-w-6xl mx-auto px-6 py-8 space-y-8 animate-fade-in">
       
       {/* Create a new Trip Form Card */}
       <div className="glass-panel p-8 rounded-3xl border border-slate-200 shadow-xl space-y-6 max-w-3xl mx-auto bg-white">

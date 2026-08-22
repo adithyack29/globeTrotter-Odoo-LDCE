@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CurrencyProvider } from './context/CurrencyContext';
@@ -22,10 +22,27 @@ import AdminDashboardPage from './pages/AdminDashboardPage';
 import PublicTripPage from './pages/PublicTripPage';
 
 function ProtectedRoute({ children }) {
-  const { user, token } = useAuth();
+  const { token } = useAuth();
   if (!token) {
     return <Navigate to="/login" replace />;
   }
+  return children;
+}
+
+function AdminRouteGuard({ children }) {
+  const { user, token, showToast } = useAuth();
+
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user && user.role !== 'ADMIN') {
+    setTimeout(() => {
+      showToast('Access Denied: Admin privileges required', 'error');
+    }, 0);
+    return <Navigate to="/dashboard" replace />;
+  }
+
   return children;
 }
 
@@ -140,9 +157,9 @@ function MainLayout() {
           <Route
             path="/admin"
             element={
-              <ProtectedRoute>
+              <AdminRouteGuard>
                 <AdminDashboardPage />
-              </ProtectedRoute>
+              </AdminRouteGuard>
             }
           />
         </Routes>
@@ -150,7 +167,7 @@ function MainLayout() {
 
       {/* Clean Production Footer */}
       <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 no-print">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-2 font-medium">
+        <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-2 font-medium">
           <p>© 2026 GlobalTrotter Travel Intelligence. All rights reserved.</p>
           <p className="text-slate-400">Production Engine v2.0</p>
         </div>

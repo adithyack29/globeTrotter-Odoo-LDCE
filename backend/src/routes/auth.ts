@@ -29,12 +29,13 @@ router.post('/register', validateRequest(registerSchema), async (req, res: Respo
         name,
         email,
         passwordHash,
+        role: 'USER',
         avatarUrl: avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`,
         language: language || 'English'
       }
     });
 
-    const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
 
     return res.status(201).json({
       message: 'Account created successfully',
@@ -43,6 +44,7 @@ router.post('/register', validateRequest(registerSchema), async (req, res: Respo
         id: user.id,
         name: user.name,
         email: user.email,
+        role: user.role,
         avatarUrl: user.avatarUrl,
         language: user.language,
         createdAt: user.createdAt
@@ -75,7 +77,7 @@ router.post('/login', validateRequest(loginSchema), async (req, res: Response) =
       });
     }
 
-    const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
 
     return res.status(200).json({
       message: 'Login successful',
@@ -84,7 +86,12 @@ router.post('/login', validateRequest(loginSchema), async (req, res: Response) =
         id: user.id,
         name: user.name,
         email: user.email,
+        role: user.role,
         avatarUrl: user.avatarUrl,
+        phone: user.phone,
+        city: user.city,
+        country: user.country,
+        bio: user.bio,
         language: user.language,
         createdAt: user.createdAt
       }
@@ -105,7 +112,12 @@ router.get('/me', authenticateToken, async (req: AuthRequest, res: Response) => 
         id: true,
         name: true,
         email: true,
+        role: true,
         avatarUrl: true,
+        phone: true,
+        city: true,
+        country: true,
+        bio: true,
         language: true,
         createdAt: true
       }

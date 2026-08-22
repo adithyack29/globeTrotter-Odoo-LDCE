@@ -55,7 +55,7 @@ const CITIES_DATA = [
 ];
 
 async function main() {
-  console.log('Seeding Database with Sections and Community Reviews...');
+  console.log('Seeding Database with RBAC Roles, Sections and Community Reviews...');
 
   await prisma.communityReview.deleteMany({});
   await prisma.tripSection.deleteMany({});
@@ -74,17 +74,51 @@ async function main() {
   }
 
   const passwordHash = await bcrypt.hash('Password123!', 10);
+
+  // 1. Create Dedicated Admin User (role: ADMIN)
+  const adminUser = await prisma.user.create({
+    data: {
+      name: 'GlobalTrotter Admin',
+      email: 'admin@globetrotter.com',
+      passwordHash,
+      role: 'ADMIN',
+      avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=400&q=80',
+      phone: '+1 (555) 000-1111',
+      city: 'New York',
+      country: 'United States',
+      bio: 'Platform System Administrator for GlobalTrotter Travel Intelligence Engine.',
+      language: 'English'
+    }
+  });
+
+  // 2. Create Standard Users (role: USER)
   const demoUser = await prisma.user.create({
     data: {
       name: 'Elena Rostova',
       email: 'elena@globetrotter.com',
       passwordHash,
+      role: 'USER',
       avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
       phone: '+1 (555) 234-5678',
       city: 'Paris',
       country: 'France',
       bio: 'Passionate travel photographer and culinary explorer traveling across Europe and Asia.',
       language: 'English'
+    }
+  });
+
+  const marcoUser = await prisma.user.create({
+    data: {
+      name: 'Marco Rossi',
+      email: 'marco@globetrotter.com',
+      passwordHash,
+      role: 'USER',
+      avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
+      phone: '+39 06 6981234',
+      city: 'Rome',
+      country: 'Italy',
+      bio: 'Architectural enthusiast and historic site explorer.',
+      language: 'Italian'
     }
   });
 
@@ -209,7 +243,7 @@ async function main() {
     ]
   });
 
-  console.log('Seeding completed successfully!');
+  console.log('Seeding completed successfully with Admin & User accounts!');
 }
 
 main()

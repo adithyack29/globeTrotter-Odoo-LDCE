@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { apiFetch } from '../api';
-import { User, Mail, Phone, MapPin, Globe, Edit2, Heart, Download, Printer, Trash2 } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Globe, Edit2, Heart, Download, Printer, Trash2, ArrowRight } from 'lucide-react';
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -65,7 +65,7 @@ export default function ProfilePage() {
   const previousTrips = trips.filter((t) => new Date(t.startDate) <= now);
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-8 space-y-8 animate-fade-in">
+    <div className="max-w-6xl mx-auto px-6 py-8 space-y-8 animate-fade-in">
       
       {/* Top Profile Header Panel */}
       <div className="glass-panel p-8 rounded-3xl border border-slate-200 shadow-md bg-white space-y-6">
@@ -81,19 +81,20 @@ export default function ProfilePage() {
           </div>
 
           {/* User Details */}
-          <div className="flex-1 space-y-3 text-center md:text-left">
+          <div className="flex-1 space-y-4 text-center md:text-left">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-slate-100 pb-3">
               <div>
-                <h1 className="text-2xl font-black text-slate-900">{user?.name}</h1>
+                <h1 className="text-2xl font-bold text-slate-900">{user?.name}</h1>
                 <p className="text-xs text-slate-500">{user?.email}</p>
               </div>
 
-              {/* [ Edit Profile ] Button */}
+              {/* Edit Profile Button with Pencil Icon */}
               <button
                 onClick={() => setIsEditing(!isEditing)}
-                className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-xs cursor-pointer"
+                className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-xs cursor-pointer transition"
               >
-                {isEditing ? 'Cancel Edit' : '[ Edit Profile ]'}
+                <Edit2 className="w-3.5 h-3.5" />
+                <span>{isEditing ? 'Cancel Edit' : 'Edit Profile'}</span>
               </button>
             </div>
 
@@ -159,19 +160,19 @@ export default function ProfilePage() {
               </form>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs pt-2">
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <div className="bg-slate-50 border border-slate-200/60 rounded-xl p-4">
                   <span className="text-slate-400 font-bold uppercase text-[10px] block">Phone</span>
                   <span className="font-bold text-slate-800">{user?.phone || 'Not set'}</span>
                 </div>
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <div className="bg-slate-50 border border-slate-200/60 rounded-xl p-4">
                   <span className="text-slate-400 font-bold uppercase text-[10px] block">City</span>
                   <span className="font-bold text-slate-800">{user?.city || 'Paris'}</span>
                 </div>
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <div className="bg-slate-50 border border-slate-200/60 rounded-xl p-4">
                   <span className="text-slate-400 font-bold uppercase text-[10px] block">Country</span>
                   <span className="font-bold text-slate-800">{user?.country || 'France'}</span>
                 </div>
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <div className="bg-slate-50 border border-slate-200/60 rounded-xl p-4">
                   <span className="text-slate-400 font-bold uppercase text-[10px] block">Bio Notes</span>
                   <span className="font-semibold text-slate-700 truncate block">{user?.bio || 'Passionate explorer'}</span>
                 </div>
@@ -202,9 +203,10 @@ export default function ProfilePage() {
                 <div className="pt-2 border-t border-slate-100 flex justify-end">
                   <button
                     onClick={() => navigate(`/trips/${trip.id}`)}
-                    className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs cursor-pointer shadow-xs"
+                    className="group flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs cursor-pointer shadow-xs transition"
                   >
-                    [ View ]
+                    <span>View Itinerary</span>
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                   </button>
                 </div>
               </div>
@@ -232,9 +234,10 @@ export default function ProfilePage() {
                 <div className="pt-2 border-t border-slate-100 flex justify-end">
                   <button
                     onClick={() => navigate(`/trips/${trip.id}`)}
-                    className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs cursor-pointer shadow-xs"
+                    className="group flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs cursor-pointer shadow-xs transition"
                   >
-                    [ View ]
+                    <span>View Itinerary</span>
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                   </button>
                 </div>
               </div>

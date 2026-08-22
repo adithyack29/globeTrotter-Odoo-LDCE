@@ -1,11 +1,42 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { authenticateToken, requireAdmin, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 const prisma = new PrismaClient();
 
+// Protect ALL admin routes with authenticateToken + requireAdmin
+router.use(authenticateToken, requireAdmin);
+
+// GET /api/admin/users - List all platform users with role metadata (excluding passwordHash)
+router.get('/users', async (_req: AuthRequest, res: Response) => {
+  try {
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        avatarUrl: true,
+        city: true,
+        country: true,
+        createdAt: true,
+        _count: {
+          select: { trips: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    return res.status(200).json({ users });
+  } catch (error: any) {
+    console.error('Fetch admin users error:', error);
+    return res.status(500).json({ error: 'Failed to fetch platform users' });
+  }
+});
+
 // GET /api/admin/analytics - Platform analytics dashboard
-router.get('/analytics', async (_req: Request, res: Response) => {
+router.get('/analytics', async (_req: AuthRequest, res: Response) => {
   try {
     const totalTrips = await prisma.trip.count();
     const totalUsers = await prisma.user.count();

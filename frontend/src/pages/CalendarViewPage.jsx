@@ -71,7 +71,7 @@ export default function CalendarViewPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-8 space-y-8 animate-fade-in">
+    <div className="max-w-6xl mx-auto px-6 py-8 space-y-8 animate-fade-in">
       
       {/* Header */}
       <div className="flex justify-between items-center border-b border-slate-200 pb-4">
@@ -83,7 +83,7 @@ export default function CalendarViewPage() {
 
       {/* Filter Toolbar */}
       <FilterToolbar
-        searchPlaceholder="Search bar......."
+        searchPlaceholder="Search trips in calendar..."
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
         groupByValue={groupBy}
@@ -118,8 +118,8 @@ export default function CalendarViewPage() {
           </button>
         </div>
 
-        {/* Days of Week Header (Fixed SUN Typo!) */}
-        <div className="grid grid-cols-7 gap-2 text-center text-xs font-black uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2">
+        {/* Days of Week Header */}
+        <div className="grid grid-cols-7 gap-2 text-center text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2">
           <span>SUN</span>
           <span>MON</span>
           <span>TUE</span>
@@ -133,7 +133,7 @@ export default function CalendarViewPage() {
         <div className="grid grid-cols-7 gap-2">
           {dayCells.map((day, idx) => {
             if (day === null) {
-              return <div key={`empty-${idx}`} className="min-h-[90px] rounded-2xl bg-slate-50/50" />;
+              return <div key={`empty-${idx}`} className="min-h-[100px] rounded-2xl bg-slate-50/50 border border-slate-100/50" />;
             }
 
             const dayTrips = getTripsForDay(day);
@@ -141,10 +141,10 @@ export default function CalendarViewPage() {
             return (
               <div
                 key={`day-${day}`}
-                className={`min-h-[95px] p-2 rounded-2xl border transition-all flex flex-col justify-between ${
+                className={`min-h-[100px] p-2.5 rounded-2xl border transition-all flex flex-col justify-between ${
                   dayTrips.length > 0
                     ? 'bg-indigo-50/40 border-indigo-200 shadow-xs'
-                    : 'bg-white border-slate-200/80 hover:border-slate-300'
+                    : 'bg-white border-slate-100 hover:bg-slate-50/50'
                 }`}
               >
                 <span className="text-xs font-extrabold text-slate-700">{day}</span>
@@ -154,7 +154,7 @@ export default function CalendarViewPage() {
                     <div
                       key={t.id}
                       onClick={() => navigate(`/trips/${t.id}`)}
-                      className="px-2 py-1 rounded-md bg-indigo-600 text-white text-[9px] font-extrabold truncate cursor-pointer hover:bg-indigo-700 shadow-xs"
+                      className="bg-indigo-600 text-white text-xs font-medium px-2 py-1 rounded-md truncate cursor-pointer hover:bg-indigo-700 shadow-xs transition"
                       title={`${t.title} (${formatCurrency(t.totalBudget)})`}
                     >
                       {t.title}

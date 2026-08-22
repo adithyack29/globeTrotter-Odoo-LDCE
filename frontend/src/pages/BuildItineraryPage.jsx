@@ -80,7 +80,7 @@ export default function BuildItineraryPage() {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto px-6 py-16 text-center space-y-4">
+      <div className="max-w-6xl mx-auto px-6 py-16 text-center space-y-4">
         <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto" />
         <p className="text-sm font-semibold text-slate-500">Loading Section-Based Itinerary Builder...</p>
       </div>
@@ -90,7 +90,7 @@ export default function BuildItineraryPage() {
   if (!trip) return null;
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-8 space-y-8 animate-fade-in">
+    <div className="max-w-6xl mx-auto px-6 py-8 space-y-8 animate-fade-in">
       
       {/* Header Banner */}
       <div className="glass-panel p-6 rounded-3xl border border-slate-200 shadow-sm flex justify-between items-center bg-white">

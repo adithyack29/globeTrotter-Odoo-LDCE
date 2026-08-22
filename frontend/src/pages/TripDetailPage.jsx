@@ -83,7 +83,7 @@ export default function TripDetailPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={handleAutoSchedule}
-              className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer"
+              className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer active:scale-[0.98] transition"
               title="Sort activities logically from morning to evening"
             >
               <Sliders className="w-3.5 h-3.5" />
@@ -92,7 +92,7 @@ export default function TripDetailPage() {
 
             <button
               onClick={() => navigate(`/builder/${trip.id}`)}
-              className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer"
+              className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer active:scale-[0.98] transition"
             >
               <Edit2 className="w-3.5 h-3.5" />
               Edit Sections
@@ -138,7 +138,7 @@ export default function TripDetailPage() {
         ))}
       </div>
 
-      {/* Two-Column Connected Diagram (Physical Activity vs Expense) */}
+      {/* Two-Column Connected Diagram with Staggered Entrance Animation */}
       <div className="glass-panel p-8 rounded-3xl border border-slate-200 shadow-md bg-white space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 border-b border-slate-200 pb-3 text-center md:text-left">
           <div className="md:col-span-2">
@@ -160,10 +160,13 @@ export default function TripDetailPage() {
 
               return (
                 <React.Fragment key={item.id}>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                  <div
+                    className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center animate-stagger-in"
+                    style={{ animationDelay: `${idx * 100}ms` }}
+                  >
                     
                     {/* Left Column: Physical Activity Card */}
-                    <div className="md:col-span-2 p-5 rounded-2xl bg-indigo-50/50 border border-indigo-200 space-y-2 shadow-xs">
+                    <div className="md:col-span-2 p-5 rounded-2xl bg-indigo-50/50 border border-indigo-200 space-y-2 shadow-xs hover:border-indigo-300 transition-colors">
                       <div className="flex justify-between items-center">
                         <span className="px-2.5 py-0.5 rounded-md bg-indigo-600 text-white text-[10px] font-extrabold uppercase">
                           Activity {idx + 1}
@@ -175,7 +178,7 @@ export default function TripDetailPage() {
                     </div>
 
                     {/* Right Column: Expense Card */}
-                    <div className="p-5 rounded-2xl bg-emerald-50/60 border border-emerald-200 space-y-1 shadow-xs text-center md:text-left">
+                    <div className="p-5 rounded-2xl bg-emerald-50/60 border border-emerald-200 space-y-1 shadow-xs hover:border-emerald-300 transition-colors text-center md:text-left">
                       <span className="text-[10px] font-extrabold uppercase text-emerald-700">Expense Tag</span>
                       <p className="text-xl font-black text-emerald-700">{formatCurrency(actCost)}</p>
                       <p className="text-[10px] text-slate-500 font-semibold">{item.activity?.category || 'General'}</p>
@@ -183,7 +186,7 @@ export default function TripDetailPage() {
                   </div>
 
                   {idx < currentDayGroup.items.length - 1 && (
-                    <div className="flex justify-center py-1">
+                    <div className="flex justify-center py-1 animate-stagger-in" style={{ animationDelay: `${idx * 100 + 50}ms` }}>
                       <div className="p-2 rounded-full bg-slate-100 border border-slate-200 text-indigo-600 shadow-xs">
                         <ArrowDown className="w-5 h-5 animate-bounce" />
                       </div>

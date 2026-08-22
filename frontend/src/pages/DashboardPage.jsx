@@ -54,9 +54,9 @@ export default function DashboardPage({ onOpenNewTripModal }) {
   const totalBudgetTarget = trips.reduce((acc, t) => acc + (t.totalBudget || 0), 0);
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-6 space-y-8 animate-fade-in relative pb-20">
+    <div className="max-w-6xl mx-auto px-6 py-6 space-y-8 animate-fade-in relative pb-20">
       
-      {/* Hero Banner Section with Proper Spacing and Vertical Alignment */}
+      {/* Hero Banner Section */}
       <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-slate-200">
         <div className="min-h-[340px] sm:min-h-[380px] relative flex items-end p-8 sm:p-10">
           <img
@@ -64,7 +64,7 @@ export default function DashboardPage({ onOpenNewTripModal }) {
             alt="Banner Hero"
             className="absolute inset-0 w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-900/60 to-transparent" />
 
           {/* Banner Content Overlay */}
           <div className="relative z-10 w-full flex flex-col sm:flex-row sm:items-end justify-between gap-6 text-white">
@@ -96,7 +96,7 @@ export default function DashboardPage({ onOpenNewTripModal }) {
 
       {/* Universal Filter Toolbar */}
       <FilterToolbar
-        searchPlaceholder="Search cities, activities, or destinations..."
+        searchPlaceholder="Search trips, cities, or activities..."
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
         groupByValue={groupBy}
@@ -107,7 +107,7 @@ export default function DashboardPage({ onOpenNewTripModal }) {
         onSortByChange={setSortBy}
       />
 
-      {/* "Top Regional Selections" (Local Relational Data Explorer) */}
+      {/* Top Regional Selections (Fixed 4:3 Aspect Ratio Cards) */}
       <div className="space-y-4">
         <div className="flex items-center justify-between border-b border-slate-200 pb-2">
           <div>
@@ -124,22 +124,33 @@ export default function DashboardPage({ onOpenNewTripModal }) {
             <div
               key={city.id}
               onClick={() => navigate('/explore')}
-              className="glass-card rounded-2xl overflow-hidden border border-slate-200 group cursor-pointer flex flex-col justify-between"
+              className="glass-card rounded-2xl overflow-hidden border border-slate-200 group cursor-pointer flex flex-col justify-between shadow-xs hover:shadow-md transition-all duration-300"
             >
-              <div className="relative h-36 overflow-hidden">
+              <div className="relative aspect-[4/3] overflow-hidden">
                 <img src={city.imageUrl} alt={city.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
+                
+                {/* Country Pill Badge */}
+                <div className="absolute top-2 left-2">
+                  <span className="px-2 py-0.5 rounded-md bg-white/90 text-slate-800 text-[9px] font-extrabold backdrop-blur-xs">
+                    {city.country}
+                  </span>
+                </div>
+
+                {/* Star Rating Chip */}
                 <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/90 text-amber-600 text-[10px] font-extrabold backdrop-blur-xs">
                   <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
-                  <span>{city.popularityScore}</span>
+                  <span>★ {city.popularityScore}</span>
                 </div>
+
                 <div className="absolute bottom-2 left-2 text-white">
                   <p className="text-sm font-bold leading-tight">{city.name}</p>
-                  <p className="text-[10px] text-indigo-200">{city.country}</p>
                 </div>
               </div>
-              <div className="p-2.5 bg-white text-[11px] font-semibold text-slate-500 flex justify-between">
-                <span>{city.costIndex} Tier</span>
+
+              {/* Pricing Footer */}
+              <div className="p-2.5 bg-white text-[11px] font-semibold text-slate-500 flex justify-between border-t border-slate-100">
+                <span className="capitalize">{city.costIndex} Tier</span>
                 <span className="text-indigo-600 font-bold">Avg $120/day</span>
               </div>
             </div>
@@ -147,7 +158,7 @@ export default function DashboardPage({ onOpenNewTripModal }) {
         </div>
       </div>
 
-      {/* "Previous / Recent Trips" (Interactive Budget & Expense Tracker) */}
+      {/* Previous / Recent Trips */}
       <div className="space-y-4">
         <div className="flex items-center justify-between border-b border-slate-200 pb-2">
           <div>
@@ -175,7 +186,7 @@ export default function DashboardPage({ onOpenNewTripModal }) {
                 <div
                   key={trip.id}
                   onClick={() => navigate(`/trips/${trip.id}`)}
-                  className="glass-card rounded-3xl overflow-hidden border border-slate-200 group cursor-pointer flex flex-col justify-between shadow-xs hover:shadow-md"
+                  className="glass-card rounded-3xl overflow-hidden border border-slate-200 group cursor-pointer flex flex-col justify-between shadow-xs hover:shadow-md transition-all duration-300"
                 >
                   <div className="relative h-44 overflow-hidden">
                     <img src={trip.coverImageUrl} alt={trip.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -205,7 +216,7 @@ export default function DashboardPage({ onOpenNewTripModal }) {
         )}
       </div>
 
-      {/* Floating Bottom-Right Action Button */}
+      {/* Floating Action Button */}
       <div className="fixed bottom-6 right-6 z-40">
         <button
           onClick={onOpenNewTripModal}
