@@ -13,11 +13,16 @@ model User {
   email        String   @unique
   passwordHash String
   avatarUrl    String?
+  phone        String?
+  city         String?
+  country      String?
+  bio          String?
   language     String   @default("English")
   createdAt    DateTime @default(now())
 
-  trips    Trip[]
-  wishlist UserWishlist[]
+  trips            Trip[]
+  wishlist         UserWishlist[]
+  communityReviews CommunityReview[]
 }
 
 model Trip {
@@ -35,8 +40,22 @@ model Trip {
   createdAt     DateTime @default(now())
 
   stops          TripStop[]
+  sections       TripSection[]
   expenses       ExpenseItem[]
   checklistItems TripChecklistItem[]
+}
+
+model TripSection {
+  id            String    @id @default(uuid())
+  tripId        String
+  trip          Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  sectionNumber Int
+  title         String
+  description   String?
+  startDate     DateTime?
+  endDate       DateTime?
+  budget        Float     @default(0.0)
+  createdAt     DateTime  @default(now())
 }
 
 model City {
@@ -133,4 +152,15 @@ model UserWishlist {
   createdAt DateTime @default(now())
 
   @@unique([userId, cityId])
+}
+
+model CommunityReview {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cityName  String
+  rating    Int      @default(5)
+  title     String
+  content   String
+  createdAt DateTime @default(now())
 }

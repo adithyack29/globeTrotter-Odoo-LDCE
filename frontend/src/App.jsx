@@ -1,81 +1,102 @@
 import React, { useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CurrencyProvider } from './context/CurrencyContext';
+
 import Navbar from './components/Navbar';
-import Footer from './components/Footer';
-import Toast from './components/Toast';
 import TripModal from './components/TripModal';
+import Toast from './components/Toast';
 
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
+import PlanTripPage from './pages/PlanTripPage';
+import BuildItineraryPage from './pages/BuildItineraryPage';
 import MyTripsPage from './pages/MyTripsPage';
-import TripDetailPage from './pages/TripDetailPage';
-import CityExplorerPage from './pages/CityExplorerPage';
-import PublicTripPage from './pages/PublicTripPage';
 import ProfilePage from './pages/ProfilePage';
+import CityExplorerPage from './pages/CityExplorerPage';
+import TripDetailPage from './pages/TripDetailPage';
+import CommunityPage from './pages/CommunityPage';
+import CalendarViewPage from './pages/CalendarViewPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
+import PublicTripPage from './pages/PublicTripPage';
 
 function ProtectedRoute({ children }) {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (!user) {
+  const { user, token } = useAuth();
+  if (!token) {
     return <Navigate to="/login" replace />;
   }
-
   return children;
 }
 
-function MainApp() {
-  const [isTripModalOpen, setIsTripModalOpen] = useState(false);
+function MainLayout() {
+  const { user, toast, hideToast } = useAuth();
+  const navigate = useNavigate();
+
+  const [isNewTripModalOpen, setIsNewTripModalOpen] = useState(false);
   const [editingTrip, setEditingTrip] = useState(null);
 
-  const handleOpenNewTrip = () => {
+  const handleOpenNewTripModal = () => {
     setEditingTrip(null);
-    setIsTripModalOpen(true);
+    setIsNewTripModalOpen(true);
   };
 
-  const handleEditTrip = (trip) => {
+  const handleOpenEditTripModal = (trip) => {
     setEditingTrip(trip);
-    setIsTripModalOpen(true);
+    setIsNewTripModalOpen(true);
+  };
+
+  const handleTripSaved = (trip) => {
+    setIsNewTripModalOpen(false);
+    navigate(`/builder/${trip.id}`);
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-between bg-slate-50 text-slate-800">
-      <Navbar onOpenNewTripModal={handleOpenNewTrip} />
-      
-      <main className="flex-grow">
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col font-sans">
+      <Navbar onOpenNewTripModal={handleOpenNewTripModal} />
+
+      <main className="flex-1">
         <Routes>
+          <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-          
+          <Route path="/share/:shareSlug" element={<PublicTripPage />} />
+
           <Route
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <DashboardPage onOpenNewTripModal={handleOpenNewTrip} />
+                <DashboardPage onOpenNewTripModal={handleOpenNewTripModal} />
               </ProtectedRoute>
             }
           />
-
+          <Route
+            path="/plan"
+            element={
+              <ProtectedRoute>
+                <PlanTripPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/builder/:id"
+            element={
+              <ProtectedRoute>
+                <BuildItineraryPage />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/trips"
             element={
               <ProtectedRoute>
-                <MyTripsPage onOpenNewTripModal={handleOpenNewTrip} onEditTripModal={handleEditTrip} />
+                <MyTripsPage
+                  onOpenNewTripModal={handleOpenNewTripModal}
+                  onEditTripModal={handleOpenEditTripModal}
+                />
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/trips/:id"
             element={
@@ -84,11 +105,6 @@ function MainApp() {
               </ProtectedRoute>
             }
           />
-
-          <Route path="/explore" element={<CityExplorerPage />} />
-          <Route path="/share/:shareSlug" element={<PublicTripPage />} />
-          <Route path="/trip/share/:shareSlug" element={<PublicTripPage />} />
-
           <Route
             path="/profile"
             element={
@@ -97,7 +113,30 @@ function MainApp() {
               </ProtectedRoute>
             }
           />
-
+          <Route
+            path="/explore"
+            element={
+              <ProtectedRoute>
+                <CityExplorerPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/community"
+            element={
+              <ProtectedRoute>
+                <CommunityPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/calendar"
+            element={
+              <ProtectedRoute>
+                <CalendarViewPage />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/admin"
             element={
@@ -106,24 +145,34 @@ function MainApp() {
               </ProtectedRoute>
             }
           />
-
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </main>
 
-      <Footer />
-      <Toast />
+      {/* Clean Production Footer */}
+      <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 no-print">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-2 font-medium">
+          <p>© 2026 GlobalTrotter Travel Intelligence. All rights reserved.</p>
+          <p className="text-slate-400">Production Engine v2.0</p>
+        </div>
+      </footer>
 
-      {/* Global Trip Creation / Editing Modal */}
-      <TripModal
-        isOpen={isTripModalOpen}
-        onClose={() => setIsTripModalOpen(false)}
-        onSaveSuccess={() => {
-          setIsTripModalOpen(false);
-          window.location.reload();
-        }}
-        initialData={editingTrip}
-      />
+      {/* Global Modals & Toast */}
+      {isNewTripModalOpen && (
+        <TripModal
+          isOpen={isNewTripModalOpen}
+          onClose={() => setIsNewTripModalOpen(false)}
+          onSuccess={handleTripSaved}
+          initialData={editingTrip}
+        />
+      )}
+
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={hideToast}
+        />
+      )}
     </div>
   );
 }
@@ -132,9 +181,7 @@ export default function App() {
   return (
     <AuthProvider>
       <CurrencyProvider>
-        <BrowserRouter>
-          <MainApp />
-        </BrowserRouter>
+        <MainLayout />
       </CurrencyProvider>
     </AuthProvider>
   );

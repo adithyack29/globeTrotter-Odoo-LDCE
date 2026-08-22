@@ -75,6 +75,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
             stopActivities: { include: { activity: true } }
           }
         },
+        sections: { orderBy: { sectionNumber: 'asc' } },
         expenses: true
       },
       orderBy: { createdAt: 'desc' }
@@ -116,15 +117,38 @@ router.post('/', authenticateToken, validateRequest(tripSchema), async (req: Aut
       },
       include: {
         stops: { include: { city: true, stopActivities: { include: { activity: true } } } },
+        sections: true,
         expenses: true
       }
     });
 
-    const costs = calculateTripCosts(trip);
+    // Create default section 1
+    await prisma.tripSection.create({
+      data: {
+        tripId: trip.id,
+        sectionNumber: 1,
+        title: 'Initial Travel & Stay Section',
+        description: 'All necessary travel information regarding transportation, hotel stay, or activities.',
+        startDate: new Date(startDate),
+        endDate: new Date(endDate),
+        budget: totalBudget || 0
+      }
+    });
+
+    const refreshed = await prisma.trip.findUnique({
+      where: { id: trip.id },
+      include: {
+        stops: { include: { city: true, stopActivities: { include: { activity: true } } } },
+        sections: { orderBy: { sectionNumber: 'asc' } },
+        expenses: true
+      }
+    });
+
+    const costs = calculateTripCosts(refreshed);
 
     return res.status(201).json({
       message: 'Trip created successfully',
-      trip: { ...trip, calculatedCosts: costs }
+      trip: { ...refreshed, calculatedCosts: costs }
     });
   } catch (error: any) {
     return res.status(500).json({ error: 'Failed to create trip' });
@@ -150,6 +174,7 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) =>
             }
           }
         },
+        sections: { orderBy: { sectionNumber: 'asc' } },
         expenses: { orderBy: { date: 'desc' } }
       }
     });
@@ -168,6 +193,61 @@ router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) =>
     });
   } catch (error: any) {
     return res.status(500).json({ error: 'Failed to fetch trip details' });
+  }
+});
+
+// POST /api/trips/:id/sections - Add another Section (Screen 5 Wireframe)
+router.post('/:id/sections', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const { id } = req.params;
+    const { title, description, startDate, endDate, budget } = req.body;
+
+    const trip = await prisma.trip.findFirst({ where: { id, userId } });
+    if (!trip) {
+      return res.status(404).json({ error: 'Trip not found or unauthorized' });
+    }
+
+    const count = await prisma.tripSection.count({ where: { tripId: id } });
+
+    const newSection = await prisma.tripSection.create({
+      data: {
+        tripId: id,
+        sectionNumber: count + 1,
+        title: title || `Section ${count + 1}`,
+        description: description || 'Information about this section (transit, hotel stay, or activity).',
+        startDate: startDate ? new Date(startDate) : trip.startDate,
+        endDate: endDate ? new Date(endDate) : trip.endDate,
+        budget: budget ? parseFloat(budget) : 0
+      }
+    });
+
+    return res.status(201).json({ message: 'Section added', section: newSection });
+  } catch (error: any) {
+    return res.status(500).json({ error: 'Failed to add section' });
+  }
+});
+
+// DELETE /api/trips/sections/:sectionId - Delete section
+router.delete('/sections/:sectionId', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const { sectionId } = req.params;
+
+    const section = await prisma.tripSection.findUnique({
+      where: { id: sectionId },
+      include: { trip: true }
+    });
+
+    if (!section || section.trip.userId !== userId) {
+      return res.status(404).json({ error: 'Section not found or unauthorized' });
+    }
+
+    await prisma.tripSection.delete({ where: { id: sectionId } });
+
+    return res.status(200).json({ message: 'Section removed' });
+  } catch (error: any) {
+    return res.status(500).json({ error: 'Failed to delete section' });
   }
 });
 
@@ -249,7 +329,6 @@ router.post('/stops/:stopId/optimize', authenticateToken, async (req: AuthReques
 
     const activities = [...stop.stopActivities];
 
-    // Priority Rank Map: Morning (Sightseeing, Adventure) -> Afternoon (Culture, Food) -> Evening (Leisure)
     const categoryRank: Record<string, number> = {
       'Sightseeing': 1,
       'Adventure': 2,
@@ -264,7 +343,6 @@ router.post('/stops/:stopId/optimize', authenticateToken, async (req: AuthReques
       return rankA - rankB;
     });
 
-    // Schedule-packing algorithm with buffer times
     let currentHour = 9;
     let currentMinute = 0;
 
@@ -283,7 +361,7 @@ router.post('/stops/:stopId/optimize', authenticateToken, async (req: AuthReques
       });
 
       const duration = sa.activity.durationMinutes || 90;
-      const buffer = 30; // 30 mins transition time
+      const buffer = 30;
       const totalSlot = duration + buffer;
 
       currentMinute += totalSlot;
@@ -361,6 +439,7 @@ router.put('/:id', authenticateToken, validateRequest(updateTripSchema), async (
       data: updateData,
       include: {
         stops: { include: { city: true, stopActivities: { include: { activity: true } } } },
+        sections: { orderBy: { sectionNumber: 'asc' } },
         expenses: true
       }
     });
@@ -405,6 +484,7 @@ router.post('/:id/duplicate', authenticateToken, async (req: AuthRequest, res: R
       where: { id },
       include: {
         stops: { include: { stopActivities: true } },
+        sections: true,
         expenses: true,
         checklistItems: true
       }
@@ -429,6 +509,20 @@ router.post('/:id/duplicate', authenticateToken, async (req: AuthRequest, res: R
         shareSlug
       }
     });
+
+    for (const sec of sourceTrip.sections) {
+      await prisma.tripSection.create({
+        data: {
+          tripId: newTrip.id,
+          sectionNumber: sec.sectionNumber,
+          title: sec.title,
+          description: sec.description,
+          startDate: sec.startDate,
+          endDate: sec.endDate,
+          budget: sec.budget
+        }
+      });
+    }
 
     for (const stop of sourceTrip.stops) {
       const newStop = await prisma.tripStop.create({
@@ -523,64 +617,6 @@ router.post('/:id/stops', authenticateToken, validateRequest(tripStopSchema), as
     return res.status(201).json({ message: 'Stop added to trip', stop: newStop });
   } catch (error: any) {
     return res.status(500).json({ error: 'Failed to add stop to trip' });
-  }
-});
-
-// PUT /api/trips/stops/:stopId - Update stop
-router.put('/stops/:stopId', authenticateToken, async (req: AuthRequest, res: Response) => {
-  try {
-    const userId = req.user!.id;
-    const { stopId } = req.params;
-
-    const stop = await prisma.tripStop.findUnique({
-      where: { id: stopId },
-      include: { trip: true }
-    });
-
-    if (!stop || stop.trip.userId !== userId) {
-      return res.status(404).json({ error: 'Stop not found or unauthorized' });
-    }
-
-    const { arrivalDate, departureDate, stayCost, transportCost, orderIndex } = req.body;
-    const updateData: any = {};
-    if (arrivalDate) updateData.arrivalDate = new Date(arrivalDate);
-    if (departureDate) updateData.departureDate = new Date(departureDate);
-    if (stayCost !== undefined) updateData.stayCost = Number(stayCost);
-    if (transportCost !== undefined) updateData.transportCost = Number(transportCost);
-    if (orderIndex !== undefined) updateData.orderIndex = Number(orderIndex);
-
-    const updatedStop = await prisma.tripStop.update({
-      where: { id: stopId },
-      data: updateData,
-      include: { city: true, stopActivities: { include: { activity: true } } }
-    });
-
-    return res.status(200).json({ message: 'Stop updated', stop: updatedStop });
-  } catch (error: any) {
-    return res.status(500).json({ error: 'Failed to update trip stop' });
-  }
-});
-
-// DELETE /api/trips/stops/:stopId - Remove stop
-router.delete('/stops/:stopId', authenticateToken, async (req: AuthRequest, res: Response) => {
-  try {
-    const userId = req.user!.id;
-    const { stopId } = req.params;
-
-    const stop = await prisma.tripStop.findUnique({
-      where: { id: stopId },
-      include: { trip: true }
-    });
-
-    if (!stop || stop.trip.userId !== userId) {
-      return res.status(404).json({ error: 'Stop not found or unauthorized' });
-    }
-
-    await prisma.tripStop.delete({ where: { id: stopId } });
-
-    return res.status(200).json({ message: 'Stop removed from trip' });
-  } catch (error: any) {
-    return res.status(500).json({ error: 'Failed to delete stop' });
   }
 });
 

@@ -3,19 +3,18 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { apiFetch } from '../api';
+import FilterToolbar from '../components/FilterToolbar';
 import {
   Compass,
-  MapPin,
-  Calendar,
   Plus,
   ArrowRight,
-  TrendingUp,
   Star,
   DollarSign,
   Briefcase,
-  Sparkles,
-  Search,
-  Wallet
+  TrendingUp,
+  Calendar,
+  Wallet,
+  Globe
 } from 'lucide-react';
 
 export default function DashboardPage({ onOpenNewTripModal }) {
@@ -26,6 +25,12 @@ export default function DashboardPage({ onOpenNewTripModal }) {
   const [trips, setTrips] = useState([]);
   const [recommendedCities, setRecommendedCities] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Filter Toolbar States
+  const [searchQuery, setSearchQuery] = useState('');
+  const [groupBy, setGroupBy] = useState('default');
+  const [filterBy, setFilterBy] = useState('all');
+  const [sortBy, setSortBy] = useState('recent');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -47,188 +52,150 @@ export default function DashboardPage({ onOpenNewTripModal }) {
 
   const totalSpentAll = trips.reduce((acc, t) => acc + (t.calculatedCosts?.grandTotal || 0), 0);
   const totalBudgetTarget = trips.reduce((acc, t) => acc + (t.totalBudget || 0), 0);
-  const remainingBudget = totalBudgetTarget - totalSpentAll;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fade-in">
+    <div className="max-w-7xl mx-auto px-6 py-6 space-y-8 animate-fade-in relative pb-20">
       
-      {/* Welcome Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-700 via-indigo-600 to-indigo-800 p-8 sm:p-10 text-white shadow-xl">
-        <div className="absolute right-0 top-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
-        
-        <div className="relative z-10 max-w-2xl space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 border border-white/30 text-white text-xs font-semibold backdrop-blur-md">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Smart Travel Intelligence</span>
-          </div>
+      {/* Hero Banner Section with Proper Spacing and Vertical Alignment */}
+      <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-slate-200">
+        <div className="min-h-[340px] sm:min-h-[380px] relative flex items-end p-8 sm:p-10">
+          <img
+            src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=80"
+            alt="Banner Hero"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent" />
 
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-            Welcome back, <span>{user?.name}</span> 👋
-          </h1>
-          
-          <p className="text-indigo-100 text-sm sm:text-base leading-relaxed">
-            You have <strong className="text-white font-bold">{trips.length} active trip itineraries</strong>. Design new multi-city stops or monitor your daily budget limits.
-          </p>
+          {/* Banner Content Overlay */}
+          <div className="relative z-10 w-full flex flex-col sm:flex-row sm:items-end justify-between gap-6 text-white">
+            <div className="space-y-3 max-w-2xl">
+              <div>
+                <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white/20 backdrop-blur-md text-xs font-bold border border-white/30 text-white shadow-sm mb-3">
+                  Customized Multi-City Itineraries
+                </span>
+                <h1 className="text-3xl sm:text-4xl font-black tracking-tight leading-tight">
+                  Explore The World with GlobalTrotter
+                </h1>
+              </div>
+              <p className="text-xs sm:text-sm text-indigo-100 font-medium leading-relaxed">
+                Trip Planning & Itinerary Management: Design multi-section itineraries, track daily budget metrics, and discover curated regional activities.
+              </p>
+            </div>
 
-          <div className="flex flex-wrap items-center gap-4 pt-2">
+            {/* Overlaid Call To Action Button */}
             <button
               onClick={onOpenNewTripModal}
-              className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-white hover:bg-slate-100 text-indigo-700 font-bold text-sm shadow-md transition-all hover:scale-105 active:scale-95 cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-xl shadow-indigo-600/30 transition-all hover:scale-105 active:scale-95 cursor-pointer shrink-0"
             >
-              <Plus className="w-4 h-4" />
-              Plan New Trip
+              <Plus className="w-5 h-5" />
+              <span>Plan a trip</span>
             </button>
-            <Link
-              to="/explore"
-              className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-indigo-800/60 hover:bg-indigo-800 border border-white/20 text-white font-semibold text-sm transition-all"
-            >
-              <Search className="w-4 h-4" />
-              Explore Destinations
-            </Link>
           </div>
         </div>
       </div>
 
-      {/* Quick Summary & Budget Highlights Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <div className="glass-card p-5 rounded-2xl border border-slate-200 flex items-center justify-between">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Total Trips</p>
-            <p className="text-2xl font-extrabold text-slate-900 mt-1">{trips.length}</p>
-          </div>
-          <div className="p-3 rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-100">
-            <Briefcase className="w-6 h-6" />
-          </div>
-        </div>
+      {/* Universal Filter Toolbar */}
+      <FilterToolbar
+        searchPlaceholder="Search cities, activities, or destinations..."
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        groupByValue={groupBy}
+        onGroupByChange={setGroupBy}
+        filterValue={filterBy}
+        onFilterChange={setFilterBy}
+        sortByValue={sortBy}
+        onSortByChange={setSortBy}
+      />
 
-        <div className="glass-card p-5 rounded-2xl border border-slate-200 flex items-center justify-between">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Calculated Expenses</p>
-            <p className="text-2xl font-extrabold text-indigo-600 mt-1">{formatCurrency(totalSpentAll)}</p>
-          </div>
-          <div className="p-3 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100">
-            <TrendingUp className="w-6 h-6" />
-          </div>
-        </div>
-
-        {/* Budget Highlights Summary Card */}
-        <div className="glass-card p-5 rounded-2xl border border-slate-200 flex items-center justify-between">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Total Travel Budget</p>
-            <p className="text-2xl font-extrabold text-slate-900 mt-1">{formatCurrency(totalBudgetTarget)}</p>
-          </div>
-          <div className="p-3 rounded-2xl bg-cyan-50 text-cyan-600 border border-cyan-100">
-            <DollarSign className="w-6 h-6" />
-          </div>
-        </div>
-
-        <div className="glass-card p-5 rounded-2xl border border-slate-200 flex items-center justify-between">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Remaining Balance</p>
-            <p className={`text-2xl font-extrabold mt-1 ${remainingBudget < 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
-              {formatCurrency(remainingBudget)}
-            </p>
-          </div>
-          <div className="p-3 rounded-2xl bg-amber-50 text-amber-600 border border-amber-100">
-            <Wallet className="w-6 h-6" />
-          </div>
-        </div>
-      </div>
-
-      {/* Upcoming Trips Section */}
+      {/* "Top Regional Selections" (Local Relational Data Explorer) */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between border-b border-slate-200 pb-2">
           <div>
-            <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">Your Upcoming Trips</h2>
-            <p className="text-xs text-slate-500">Recent itineraries and multi-city travel plans</p>
+            <h2 className="text-xl font-black text-slate-900 tracking-tight">Top Regional Selections</h2>
+            <p className="text-xs text-slate-500 font-medium">Local Relational Data Explorer</p>
           </div>
-          <Link to="/trips" className="text-xs font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1">
-            View All Trips ({trips.length}) <ArrowRight className="w-3.5 h-3.5" />
+          <Link to="/explore" className="text-xs font-bold text-indigo-600 hover:text-indigo-700">
+            View All Cities ➔
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+          {recommendedCities.slice(0, 5).map((city) => (
+            <div
+              key={city.id}
+              onClick={() => navigate('/explore')}
+              className="glass-card rounded-2xl overflow-hidden border border-slate-200 group cursor-pointer flex flex-col justify-between"
+            >
+              <div className="relative h-36 overflow-hidden">
+                <img src={city.imageUrl} alt={city.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
+                <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/90 text-amber-600 text-[10px] font-extrabold backdrop-blur-xs">
+                  <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                  <span>{city.popularityScore}</span>
+                </div>
+                <div className="absolute bottom-2 left-2 text-white">
+                  <p className="text-sm font-bold leading-tight">{city.name}</p>
+                  <p className="text-[10px] text-indigo-200">{city.country}</p>
+                </div>
+              </div>
+              <div className="p-2.5 bg-white text-[11px] font-semibold text-slate-500 flex justify-between">
+                <span>{city.costIndex} Tier</span>
+                <span className="text-indigo-600 font-bold">Avg $120/day</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* "Previous / Recent Trips" (Interactive Budget & Expense Tracker) */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+          <div>
+            <h2 className="text-xl font-black text-slate-900 tracking-tight">Previous / Recent Trips</h2>
+            <p className="text-xs text-slate-500 font-medium">Interactive Budget & Expense Tracker</p>
+          </div>
+          <Link to="/trips" className="text-xs font-bold text-indigo-600 hover:text-indigo-700">
+            All Trips ({trips.length}) ➔
           </Link>
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-64 rounded-2xl bg-white border border-slate-200 animate-pulse" />
+              <div key={i} className="h-64 rounded-3xl bg-white border border-slate-200 animate-pulse" />
             ))}
           </div>
-        ) : trips.length === 0 ? (
-          <div className="text-center py-12 glass-panel rounded-2xl border border-dashed border-slate-300 space-y-3">
-            <Compass className="w-10 h-10 text-slate-400 mx-auto" />
-            <h3 className="text-base font-bold text-slate-800">No trips planned yet</h3>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">Create your first multi-city trip itinerary with custom activities and budget tracking.</p>
-            <button
-              onClick={onOpenNewTripModal}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold shadow-md cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              Create First Trip
-            </button>
-          </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {trips.slice(0, 3).map((trip) => {
               const spent = trip.calculatedCosts?.grandTotal || 0;
-              const isOver = spent > trip.totalBudget && trip.totalBudget > 0;
               const percent = trip.totalBudget > 0 ? Math.min(100, Math.round((spent / trip.totalBudget) * 100)) : 0;
 
               return (
                 <div
                   key={trip.id}
                   onClick={() => navigate(`/trips/${trip.id}`)}
-                  className="glass-card rounded-2xl overflow-hidden border border-slate-200 group cursor-pointer flex flex-col justify-between"
+                  className="glass-card rounded-3xl overflow-hidden border border-slate-200 group cursor-pointer flex flex-col justify-between shadow-xs hover:shadow-md"
                 >
                   <div className="relative h-44 overflow-hidden">
-                    <img
-                      src={trip.coverImageUrl || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=800&q=80'}
-                      alt={trip.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent" />
-                    
-                    <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
-                      {trip.stops?.map((st) => (
-                        <span key={st.id} className="px-2 py-0.5 rounded-full bg-white/90 backdrop-blur-md text-[10px] font-bold text-slate-800 border border-slate-200">
-                          {st.city?.name}
-                        </span>
-                      ))}
-                    </div>
-
+                    <img src={trip.coverImageUrl} alt={trip.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
                     <div className="absolute bottom-3 left-3 right-3 text-white">
-                      <h3 className="text-lg font-bold leading-tight group-hover:text-indigo-200 transition-colors">
-                        {trip.title}
-                      </h3>
-                      <p className="text-xs text-indigo-100 flex items-center gap-1.5 mt-0.5 font-medium">
+                      <h3 className="text-lg font-bold leading-tight">{trip.title}</h3>
+                      <p className="text-xs text-indigo-100 flex items-center gap-1 mt-0.5">
                         <Calendar className="w-3.5 h-3.5 text-indigo-300" />
-                        <span>
-                          {new Date(trip.startDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} -{' '}
-                          {new Date(trip.endDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                        </span>
+                        <span>{new Date(trip.startDate).toLocaleDateString()} - {new Date(trip.endDate).toLocaleDateString()}</span>
                       </p>
                     </div>
                   </div>
 
                   <div className="p-4 space-y-3 bg-white">
-                    <p className="text-xs text-slate-600 line-clamp-2">
-                      {trip.description || 'No description provided.'}
-                    </p>
-
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-xs font-semibold">
-                        <span className="text-slate-500">Total Spent</span>
-                        <span className={isOver ? 'text-rose-600 font-bold' : 'text-slate-800'}>
-                          {formatCurrency(spent)} / {formatCurrency(trip.totalBudget)}
-                        </span>
-                      </div>
-                      <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden border border-slate-200">
-                        <div
-                          className={`h-full rounded-full transition-all ${
-                            isOver ? 'bg-rose-500' : 'bg-indigo-600'
-                          }`}
-                          style={{ width: `${percent}%` }}
-                        />
-                      </div>
+                    <div className="flex justify-between text-xs font-semibold">
+                      <span className="text-slate-500">Expenses</span>
+                      <span className="text-slate-900 font-bold">{formatCurrency(spent)} / {formatCurrency(trip.totalBudget)}</span>
+                    </div>
+                    <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden border border-slate-200">
+                      <div className="h-full bg-indigo-600 rounded-full" style={{ width: `${percent}%` }} />
                     </div>
                   </div>
                 </div>
@@ -238,78 +205,15 @@ export default function DashboardPage({ onOpenNewTripModal }) {
         )}
       </div>
 
-      {/* Recommended Destinations Section */}
-      <div className="space-y-4 pt-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">Recommended Destinations</h2>
-            <p className="text-xs text-slate-500">Top-rated cities with curated activity experiences</p>
-          </div>
-          <Link to="/explore" className="text-xs font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1">
-            Explore All Destinations <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {recommendedCities.map((city) => (
-            <div
-              key={city.id}
-              className="glass-card rounded-2xl overflow-hidden border border-slate-200 group flex flex-col justify-between"
-            >
-              <div className="relative h-48 overflow-hidden">
-                <img
-                  src={city.imageUrl}
-                  alt={city.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent" />
-                
-                <div className="absolute top-3 left-3">
-                  <span
-                    className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider border backdrop-blur-md ${
-                      city.costIndex === 'high'
-                        ? 'bg-rose-50 text-rose-700 border-rose-200'
-                        : city.costIndex === 'medium'
-                        ? 'bg-amber-50 text-amber-700 border-amber-200'
-                        : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                    }`}
-                  >
-                    {city.costIndex} Cost
-                  </span>
-                </div>
-
-                <div className="absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/90 text-amber-600 border border-slate-200 text-xs font-extrabold backdrop-blur-md">
-                  <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-                  <span>{city.popularityScore}</span>
-                </div>
-
-                <div className="absolute bottom-3 left-3 right-3 text-white">
-                  <h3 className="text-xl font-extrabold">{city.name}</h3>
-                  <p className="text-xs text-indigo-200 font-semibold">{city.country} • {city.region}</p>
-                </div>
-              </div>
-
-              <div className="p-4 space-y-3 bg-white flex-1 flex flex-col justify-between">
-                <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
-                  {city.description}
-                </p>
-
-                <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                  <span className="text-[11px] text-slate-500 font-semibold">
-                    {city.activities?.length || 0} Curated Activities
-                  </span>
-
-                  <Link
-                    to="/explore"
-                    className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-700"
-                  >
-                    Explore City <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+      {/* Floating Bottom-Right Action Button */}
+      <div className="fixed bottom-6 right-6 z-40">
+        <button
+          onClick={onOpenNewTripModal}
+          className="flex items-center gap-2 px-5 py-3 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-2xl transition-all hover:scale-105 active:scale-95 cursor-pointer border border-indigo-500"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Plan a trip</span>
+        </button>
       </div>
     </div>
   );

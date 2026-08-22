@@ -11,6 +11,7 @@ import usersRoutes from './routes/users';
 import currencyRoutes from './routes/currency';
 import checklistRoutes from './routes/checklist';
 import adminRoutes from './routes/admin';
+import communityRoutes from './routes/community';
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ app.use('/api/users', usersRoutes);
 app.use('/api/currency', currencyRoutes);
 app.use('/api', checklistRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/community', communityRoutes);
 
 // Health Check
 app.get('/api/health', (_req: Request, res: Response) => {

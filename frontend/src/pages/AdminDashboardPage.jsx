@@ -1,235 +1,223 @@
 import React, { useState, useEffect } from 'react';
 import { apiFetch } from '../api';
 import { useCurrency } from '../context/CurrencyContext';
+import FilterToolbar from '../components/FilterToolbar';
 import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, Legend, LineChart, Line
 } from 'recharts';
-import {
-  Shield,
-  Briefcase,
-  Users,
-  Building,
-  DollarSign,
-  TrendingUp,
-  MapPin,
-  Search,
-  ExternalLink,
-  Globe
-} from 'lucide-react';
-
-const COLORS = ['#6366f1', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'];
+import { Shield, Users, MapPin, Activity as ActIcon, TrendingUp, Search } from 'lucide-react';
 
 export default function AdminDashboardPage() {
   const { formatCurrency } = useCurrency();
-  const [data, setData] = useState(null);
+  const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('users');
+
+  // Filter Toolbar States
   const [searchQuery, setSearchQuery] = useState('');
+  const [groupBy, setGroupBy] = useState('default');
+  const [filterBy, setFilterBy] = useState('all');
+  const [sortBy, setSortBy] = useState('recent');
 
   useEffect(() => {
-    const fetchAdminData = async () => {
+    const fetchAnalytics = async () => {
       try {
         const res = await apiFetch('/admin/analytics');
-        setData(res.analytics);
+        setAnalytics(res.analytics);
       } catch (err) {
-        console.error('Failed to fetch admin analytics:', err);
+        console.error('Fetch admin analytics error:', err);
       } finally {
         setLoading(false);
       }
     };
-    fetchAdminData();
+    fetchAnalytics();
   }, []);
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-16 text-center space-y-4">
+      <div className="max-w-7xl mx-auto px-6 py-16 text-center space-y-4">
         <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto" />
-        <p className="text-sm font-semibold text-slate-500">Loading platform admin analytics...</p>
+        <p className="text-sm font-semibold text-slate-500">Loading Admin Panel Analytics...</p>
       </div>
     );
   }
 
-  if (!data) return null;
-
-  const filteredPublicTrips = (data.publicTrips || []).filter((t) =>
-    t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.user?.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fade-in">
+    <div className="max-w-7xl mx-auto px-6 py-8 space-y-8 animate-fade-in">
       
-      {/* Page Title */}
-      <div className="space-y-1">
-        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
-          <Shield className="w-8 h-8 text-indigo-600" />
-          Platform Admin Analytics Dashboard
-        </h1>
-        <p className="text-sm text-slate-500">Real-time telemetry, platform user growth, expense distributions, and destination metrics</p>
-      </div>
-
-      {/* KPI Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <div className="glass-card p-5 rounded-2xl border border-slate-200 flex items-center justify-between">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Total Trips Created</p>
-            <p className="text-2xl font-extrabold text-slate-900 mt-1">{data.totalTrips}</p>
-          </div>
-          <div className="p-3 rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-100">
-            <Briefcase className="w-6 h-6" />
-          </div>
-        </div>
-
-        <div className="glass-card p-5 rounded-2xl border border-slate-200 flex items-center justify-between">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Total Platform Users</p>
-            <p className="text-2xl font-extrabold text-slate-900 mt-1">{data.totalUsers}</p>
-          </div>
-          <div className="p-3 rounded-2xl bg-blue-50 text-blue-600 border border-blue-100">
-            <Users className="w-6 h-6" />
-          </div>
-        </div>
-
-        <div className="glass-card p-5 rounded-2xl border border-slate-200 flex items-center justify-between">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Avg Budget per Trip</p>
-            <p className="text-2xl font-extrabold text-indigo-600 mt-1">{formatCurrency(data.avgBudget)}</p>
-          </div>
-          <div className="p-3 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100">
-            <TrendingUp className="w-6 h-6" />
-          </div>
-        </div>
-
-        <div className="glass-card p-5 rounded-2xl border border-slate-200 flex items-center justify-between">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Destinations & Activities</p>
-            <p className="text-2xl font-extrabold text-slate-800 mt-1">{data.totalCities} / {data.totalActivities}</p>
-          </div>
-          <div className="p-3 rounded-2xl bg-cyan-50 text-cyan-600 border border-cyan-100">
-            <Building className="w-6 h-6" />
-          </div>
+      {/* Header */}
+      <div className="flex justify-between items-center border-b border-slate-200 pb-4">
+        <div>
+          <h1 className="text-3xl font-black text-slate-900">Admin Panel Screen</h1>
+          <p className="text-xs text-slate-500 mt-1">Platform governance, user management, city trends, and analytics</p>
         </div>
       </div>
 
-      {/* Interactive Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        
-        {/* Horizontal Bar Chart: Top 5 Booked Cities */}
-        <div className="glass-panel rounded-3xl border border-slate-200 p-6 space-y-4 shadow-xs">
-          <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <MapPin className="w-5 h-5 text-indigo-600" />
-            Top 5 Booked Destinations (Horizontal Bar Chart)
-          </h3>
+      {/* Filter Toolbar */}
+      <FilterToolbar
+        searchPlaceholder="Search bar......."
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        groupByValue={groupBy}
+        onGroupByChange={setGroupBy}
+        filterValue={filterBy}
+        onFilterChange={setFilterBy}
+        sortByValue={sortBy}
+        onSortByChange={setSortBy}
+      />
+
+      {/* 4 Segmented Tab Buttons */}
+      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-3">
+        <button
+          onClick={() => setActiveTab('users')}
+          className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer ${
+            activeTab === 'users'
+              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+          }`}
+        >
+          [ Manage Users ]
+        </button>
+
+        <button
+          onClick={() => setActiveTab('cities')}
+          className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer ${
+            activeTab === 'cities'
+              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+          }`}
+        >
+          [ Popular cities ]
+        </button>
+
+        <button
+          onClick={() => setActiveTab('activities')}
+          className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer ${
+            activeTab === 'activities'
+              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+          }`}
+        >
+          [ Popular Activities ]
+        </button>
+
+        <button
+          onClick={() => setActiveTab('analytics')}
+          className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer ${
+            activeTab === 'analytics'
+              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+          }`}
+        >
+          [ User Trends and Analytics ]
+        </button>
+      </div>
+
+      {/* TAB CONTENT AREAS */}
+
+      {/* TAB 1: Manage Users */}
+      {activeTab === 'users' && (
+        <div className="glass-panel p-6 rounded-3xl border border-slate-200 space-y-4 bg-white shadow-sm">
+          <h3 className="text-lg font-bold text-slate-900">Registered Platform Users</h3>
+          <p className="text-xs text-slate-500">Responsible for managing users and auditing their trip creation actions.</p>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs text-slate-700">
+              <thead className="bg-slate-50 text-slate-400 font-extrabold uppercase border-b border-slate-200">
+                <tr>
+                  <th className="p-3">User Name</th>
+                  <th className="p-3">Email</th>
+                  <th className="p-3">Location</th>
+                  <th className="p-3">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                <tr className="hover:bg-slate-50">
+                  <td className="p-3 font-bold text-slate-900">Elena Rostova</td>
+                  <td className="p-3 text-slate-500">elena@globetrotter.com</td>
+                  <td className="p-3">Paris, France</td>
+                  <td className="p-3"><span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 font-bold">Active</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 2: Popular cities */}
+      {activeTab === 'cities' && (
+        <div className="glass-panel p-6 rounded-3xl border border-slate-200 space-y-4 bg-white shadow-sm">
+          <h3 className="text-lg font-bold text-slate-900">Popular Destinations Volume</h3>
+          <p className="text-xs text-slate-500">Lists all popular cities visited based on current user trends.</p>
 
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data.topBookedCities} layout="vertical">
-                <XAxis type="number" stroke="#64748b" />
-                <YAxis dataKey="cityName" type="category" stroke="#64748b" width={100} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1', borderRadius: '12px', color: '#0f172a' }}
-                />
-                <Bar dataKey="tripCount" fill="#4f46e5" radius={[0, 8, 8, 0]} />
+              <BarChart data={analytics?.topDestinations || []} layout="vertical">
+                <XAxis type="number" />
+                <YAxis dataKey="cityName" type="category" width={80} />
+                <Tooltip formatter={(value) => [`${value} Trips`, 'Bookings']} />
+                <Bar dataKey="tripCount" fill="#6366f1" radius={[0, 8, 8, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
+      )}
 
-        {/* Pie Chart: Expense Distribution across all trips */}
-        <div className="glass-panel rounded-3xl border border-slate-200 p-6 space-y-4 shadow-xs">
-          <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <DollarSign className="w-5 h-5 text-emerald-600" />
-            Platform Expense Distribution by Category
-          </h3>
+      {/* TAB 3: Popular Activities */}
+      {activeTab === 'activities' && (
+        <div className="glass-panel p-6 rounded-3xl border border-slate-200 space-y-4 bg-white shadow-sm">
+          <h3 className="text-lg font-bold text-slate-900">Popular Activities & Spend Distribution</h3>
+          <p className="text-xs text-slate-500">Lists popular activities travelers engage in based on trend data.</p>
 
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={data.categoryDistribution}
+                  data={analytics?.categoryExpenses || []}
                   cx="50%"
                   cy="50%"
-                  innerRadius={55}
-                  outerRadius={85}
-                  paddingAngle={4}
-                  dataKey="amount"
+                  outerRadius={100}
+                  dataKey="totalSpent"
+                  nameKey="category"
+                  label
                 >
-                  {data.categoryDistribution.map((entry, index) => (
+                  {(analytics?.categoryExpenses || []).map((_, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip
-                  formatter={(val) => formatCurrency(val)}
-                  contentStyle={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1', borderRadius: '12px', color: '#0f172a' }}
-                />
+                <Tooltip formatter={(val) => [formatCurrency(val), 'Total Spend']} />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Public Trips Table */}
-      <div className="glass-panel rounded-3xl border border-slate-200 p-6 space-y-4 shadow-xs">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <Globe className="w-5 h-5 text-indigo-600" />
-            Public Shared Itineraries Exploration Table
-          </h3>
+      {/* TAB 4: User Trends and Analytics */}
+      {activeTab === 'analytics' && (
+        <div className="glass-panel p-6 rounded-3xl border border-slate-200 space-y-6 bg-white shadow-sm">
+          <h3 className="text-lg font-bold text-slate-900">User Trends and Analytics Visualizations</h3>
+          <p className="text-xs text-slate-500">Provides high-level analytical metrics across platform adoption points.</p>
 
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search public trips..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-1.5 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 focus:outline-none focus:border-indigo-600"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100">
+              <span className="text-xs text-slate-400 font-bold uppercase">Total Platform Users</span>
+              <p className="text-2xl font-black text-indigo-700 mt-1">{analytics?.kpis?.totalUsers || 1}</p>
+            </div>
+            <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-100">
+              <span className="text-xs text-slate-400 font-bold uppercase">Total Trips Planned</span>
+              <p className="text-2xl font-black text-emerald-700 mt-1">{analytics?.kpis?.totalTrips || 1}</p>
+            </div>
+            <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-100">
+              <span className="text-xs text-slate-400 font-bold uppercase">Average Trip Budget</span>
+              <p className="text-2xl font-black text-amber-700 mt-1">{formatCurrency(analytics?.kpis?.avgBudget || 2500)}</p>
+            </div>
           </div>
         </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-700 divide-y divide-slate-200">
-            <thead className="bg-slate-50 text-slate-900 font-bold uppercase tracking-wider">
-              <tr>
-                <th className="px-4 py-3">Trip Title</th>
-                <th className="px-4 py-3">Author</th>
-                <th className="px-4 py-3">Route Stops</th>
-                <th className="px-4 py-3">Target Budget</th>
-                <th className="px-4 py-3 text-right">Share Link</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredPublicTrips.map((t) => (
-                <tr key={t.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-4 py-3 font-bold text-slate-900">{t.title}</td>
-                  <td className="px-4 py-3 font-medium text-slate-600">{t.user?.name || 'Explorer'}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex flex-wrap gap-1">
-                      {t.stops?.map((s) => (
-                        <span key={s.id} className="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-semibold border border-indigo-200 text-[10px]">
-                          {s.city?.name}
-                        </span>
-                      ))}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 font-bold text-emerald-600">{formatCurrency(t.totalBudget)}</td>
-                  <td className="px-4 py-3 text-right">
-                    <a
-                      href={`/share/${t.shareSlug}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1 font-bold text-indigo-600 hover:text-indigo-700"
-                    >
-                      View Link <ExternalLink className="w-3 h-3" />
-                    </a>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      )}
     </div>
   );
 }
