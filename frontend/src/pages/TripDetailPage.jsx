@@ -30,7 +30,10 @@ import {
   CheckSquare,
   Printer,
   Shield,
-  FileText
+  FileText,
+  MessageCircle,
+  Wallet,
+  TrendingUp
 } from 'lucide-react';
 
 const CATEGORY_COLORS = {
@@ -51,7 +54,7 @@ export default function TripDetailPage() {
   const [checklistItems, setChecklistItems] = useState([]);
   const [cities, setCities] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState('timeline'); // 'timeline' | 'daywise' | 'calendar' | 'checklist' | 'analytics'
+  const [viewMode, setViewMode] = useState('timeline');
   const [copiedShareLink, setCopiedShareLink] = useState(false);
 
   // Drag and Drop
@@ -121,6 +124,12 @@ export default function TripDetailPage() {
 
   const totalSpent = trip.calculatedCosts?.grandTotal || 0;
   const isOverBudget = totalSpent > trip.totalBudget && trip.totalBudget > 0;
+  const remainingBalance = trip.totalBudget - totalSpent;
+
+  const start = new Date(trip.startDate);
+  const end = new Date(trip.endDate);
+  const totalDays = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+  const avgCostPerDay = totalSpent / totalDays;
 
   // Add Stop
   const handleAddStop = async (e) => {
@@ -291,13 +300,19 @@ export default function TripDetailPage() {
     }
   };
 
-  // Copy Share Link
+  // Copy & Web Share / WhatsApp
   const handleCopyShareLink = () => {
     const url = `${window.location.origin}/share/${trip.shareSlug}`;
     navigator.clipboard.writeText(url);
     setCopiedShareLink(true);
     showToast('Share URL copied to clipboard!', 'success');
     setTimeout(() => setCopiedShareLink(false), 3000);
+  };
+
+  const handleWhatsAppShare = () => {
+    const url = `${window.location.origin}/share/${trip.shareSlug}`;
+    const text = encodeURIComponent(`Check out my travel itinerary "${trip.title}" on Globe Trotter: ${url}`);
+    window.open(`https://wa.me/?text=${text}`, '_blank');
   };
 
   // Recharts Donut & Bar Data
@@ -342,17 +357,27 @@ export default function TripDetailPage() {
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/90 hover:bg-white text-xs font-bold text-slate-800 shadow-md backdrop-blur-md transition-all cursor-pointer border border-slate-200"
             >
               <Printer className="w-4 h-4 text-indigo-600" />
-              <span>Export PDF / Print</span>
+              <span>Export PDF</span>
             </button>
 
             {trip.isPublic && (
-              <button
-                onClick={handleCopyShareLink}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/90 hover:bg-white text-xs font-bold text-slate-800 shadow-md backdrop-blur-md transition-all cursor-pointer border border-slate-200"
-              >
-                {copiedShareLink ? <Check className="w-4 h-4 text-emerald-600" /> : <Share2 className="w-4 h-4 text-indigo-600" />}
-                <span>{copiedShareLink ? 'Copied!' : 'Share'}</span>
-              </button>
+              <>
+                <button
+                  onClick={handleWhatsAppShare}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-xs font-bold text-white shadow-md backdrop-blur-md transition-all cursor-pointer"
+                  title="Share via WhatsApp"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span className="hidden sm:inline">WhatsApp</span>
+                </button>
+                <button
+                  onClick={handleCopyShareLink}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/90 hover:bg-white text-xs font-bold text-slate-800 shadow-md backdrop-blur-md transition-all cursor-pointer border border-slate-200"
+                >
+                  {copiedShareLink ? <Check className="w-4 h-4 text-emerald-600" /> : <Share2 className="w-4 h-4 text-indigo-600" />}
+                  <span>{copiedShareLink ? 'Copied!' : 'Copy Link'}</span>
+                </button>
+              </>
             )}
           </div>
 
@@ -373,12 +398,11 @@ export default function TripDetailPage() {
                 <CalendarIcon className="w-4 h-4 text-indigo-300" />
                 <span>
                   {new Date(trip.startDate).toLocaleDateString(undefined, { month: 'long', day: 'numeric' })} –{' '}
-                  {new Date(trip.endDate).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
+                  {new Date(trip.endDate).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })} ({totalDays} Days)
                 </span>
               </p>
             </div>
 
-            {/* Header Real-Time Cost Badge with Multi-Currency Format */}
             <div className="p-4 rounded-2xl bg-white/95 text-slate-900 border border-slate-200 shadow-xl backdrop-blur-md min-w-[230px]">
               <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Real-Time Cost Aggregate</p>
               <div className="flex items-baseline gap-2 mt-1">
@@ -402,6 +426,31 @@ export default function TripDetailPage() {
           </div>
         </div>
       )}
+
+      {/* FINANCIAL OVERVIEW CARDS (Screen 9 Requirement) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="glass-card p-4 rounded-2xl border border-slate-200">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Target Budget</span>
+          <p className="text-xl font-extrabold text-slate-900 mt-1">{formatCurrency(trip.totalBudget)}</p>
+        </div>
+
+        <div className="glass-card p-4 rounded-2xl border border-slate-200">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Total Calculated Cost</span>
+          <p className="text-xl font-extrabold text-indigo-600 mt-1">{formatCurrency(totalSpent)}</p>
+        </div>
+
+        <div className="glass-card p-4 rounded-2xl border border-slate-200">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Remaining Balance</span>
+          <p className={`text-xl font-extrabold mt-1 ${remainingBalance < 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+            {formatCurrency(remainingBalance)}
+          </p>
+        </div>
+
+        <div className="glass-card p-4 rounded-2xl border border-slate-200">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Avg Cost Per Day</span>
+          <p className="text-xl font-extrabold text-cyan-600 mt-1">{formatCurrency(avgCostPerDay)} / day</p>
+        </div>
+      </div>
 
       {/* FLOATING PILL TABS */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-slate-200 pb-4">
@@ -479,8 +528,6 @@ export default function TripDetailPage() {
       {/* VIEW 1: TIMELINE VIEW */}
       {viewMode === 'timeline' && (
         <div className="space-y-6">
-          
-          {/* Route Connection Line */}
           {trip.stops?.length > 1 && (
             <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs flex flex-wrap items-center justify-center gap-3 text-xs font-bold text-slate-800">
               <span className="text-slate-500 font-semibold uppercase tracking-wider text-[11px]">Itinerary Route:</span>
@@ -501,7 +548,6 @@ export default function TripDetailPage() {
             <div className="text-center py-16 glass-panel rounded-3xl border border-dashed border-slate-300 space-y-3">
               <MapPin className="w-10 h-10 text-slate-400 mx-auto" />
               <h3 className="text-base font-bold text-slate-800">No destination stops added yet</h3>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">Add cities from our database of 22+ worldwide destinations to begin scheduling activities.</p>
               <button
                 onClick={() => setIsAddStopOpen(true)}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold shadow-md cursor-pointer"
@@ -546,7 +592,6 @@ export default function TripDetailPage() {
                       <span className="font-extrabold text-indigo-600">{formatCurrency(stop.stayCost + stop.transportCost)}</span>
                     </div>
 
-                    {/* SMART OPTIMIZER BUTTON */}
                     <button
                       onClick={() => {
                         setSelectedStopToOptimize(stop);
@@ -577,7 +622,6 @@ export default function TripDetailPage() {
                   </div>
                 </div>
 
-                {/* Scheduled Activities */}
                 <div className="space-y-3">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
                     <ActivityIcon className="w-4 h-4 text-emerald-600" />
@@ -585,7 +629,7 @@ export default function TripDetailPage() {
                   </h4>
 
                   {stop.stopActivities?.length === 0 ? (
-                    <p className="text-xs text-slate-500 italic py-2">No activities scheduled yet for this stop. Click "Add Activity" or "Smart Optimize" to build your day.</p>
+                    <p className="text-xs text-slate-500 italic py-2">No activities scheduled yet for this stop.</p>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {stop.stopActivities?.map((sa) => (
@@ -746,7 +790,6 @@ export default function TripDetailPage() {
               <p className="text-xs text-slate-500">Auto-generated & personalized travel items based on your trip activities</p>
             </div>
 
-            {/* Progress Bar */}
             <div className="w-full sm:w-64 space-y-1">
               <div className="flex justify-between text-xs font-bold text-slate-700">
                 <span>Checklist Progress</span>
@@ -758,7 +801,6 @@ export default function TripDetailPage() {
             </div>
           </div>
 
-          {/* Add Custom Item */}
           <form onSubmit={handleAddChecklistItem} className="flex gap-2">
             <input
               type="text"
@@ -787,7 +829,6 @@ export default function TripDetailPage() {
             </button>
           </form>
 
-          {/* Checklist Items List */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {checklistItems.map((item) => (
               <div
@@ -803,7 +844,7 @@ export default function TripDetailPage() {
                   <input
                     type="checkbox"
                     checked={item.isCompleted}
-                    onChange={() => {}} // handled by parent onClick
+                    onChange={() => {}}
                     className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
                   />
                   <div>
@@ -913,7 +954,6 @@ export default function TripDetailPage() {
               <p className="font-semibold text-slate-800">
                 Optimizing schedule for <span className="text-indigo-600 font-bold">{selectedStopToOptimize.city?.name}</span>
               </p>
-              <p>The algorithm will:</p>
               <ul className="list-disc pl-5 space-y-1">
                 <li>Sequence Morning Sightseeing/Walking activities first.</li>
                 <li>Position Afternoon Museums/Culture tours next.</li>
@@ -952,7 +992,6 @@ export default function TripDetailPage() {
               </button>
             </div>
 
-            {/* Printable Content Container */}
             <div className="space-y-6 text-slate-900 p-4 border border-slate-200 rounded-2xl bg-white">
               <div className="flex justify-between items-start border-b border-slate-200 pb-4">
                 <div>

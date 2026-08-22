@@ -16,7 +16,8 @@ model User {
   language     String   @default("English")
   createdAt    DateTime @default(now())
 
-  trips Trip[]
+  trips    Trip[]
+  wishlist UserWishlist[]
 }
 
 model Trip {
@@ -50,6 +51,7 @@ model City {
 
   activities Activity[]
   tripStops  TripStop[]
+  wishlist   UserWishlist[]
 }
 
 model TripStop {
@@ -120,4 +122,15 @@ model TripChecklistItem {
   title       String
   category    String  // Essentials, Packing, Adventure, Culture, Food, Documents
   isCompleted Boolean @default(false)
+}
+
+model UserWishlist {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cityId    String
+  city      City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, cityId])
 }

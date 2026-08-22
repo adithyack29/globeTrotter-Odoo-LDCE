@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useCurrency } from '../context/CurrencyContext';
 import { apiFetch } from '../api';
 import {
   Compass,
@@ -13,11 +14,13 @@ import {
   DollarSign,
   Briefcase,
   Sparkles,
-  Search
+  Search,
+  Wallet
 } from 'lucide-react';
 
 export default function DashboardPage({ onOpenNewTripModal }) {
   const { user } = useAuth();
+  const { formatCurrency } = useCurrency();
   const navigate = useNavigate();
 
   const [trips, setTrips] = useState([]);
@@ -44,6 +47,7 @@ export default function DashboardPage({ onOpenNewTripModal }) {
 
   const totalSpentAll = trips.reduce((acc, t) => acc + (t.calculatedCosts?.grandTotal || 0), 0);
   const totalBudgetTarget = trips.reduce((acc, t) => acc + (t.totalBudget || 0), 0);
+  const remainingBudget = totalBudgetTarget - totalSpentAll;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fade-in">
@@ -85,8 +89,8 @@ export default function DashboardPage({ onOpenNewTripModal }) {
         </div>
       </div>
 
-      {/* Quick Summary Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+      {/* Quick Summary & Budget Highlights Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         <div className="glass-card p-5 rounded-2xl border border-slate-200 flex items-center justify-between">
           <div>
             <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Total Trips</p>
@@ -100,20 +104,33 @@ export default function DashboardPage({ onOpenNewTripModal }) {
         <div className="glass-card p-5 rounded-2xl border border-slate-200 flex items-center justify-between">
           <div>
             <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Calculated Expenses</p>
-            <p className="text-2xl font-extrabold text-indigo-600 mt-1">${totalSpentAll.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+            <p className="text-2xl font-extrabold text-indigo-600 mt-1">{formatCurrency(totalSpentAll)}</p>
           </div>
           <div className="p-3 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100">
             <TrendingUp className="w-6 h-6" />
           </div>
         </div>
 
+        {/* Budget Highlights Summary Card */}
         <div className="glass-card p-5 rounded-2xl border border-slate-200 flex items-center justify-between">
           <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Total Budget Target</p>
-            <p className="text-2xl font-extrabold text-slate-800 mt-1">${totalBudgetTarget.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Total Travel Budget</p>
+            <p className="text-2xl font-extrabold text-slate-900 mt-1">{formatCurrency(totalBudgetTarget)}</p>
           </div>
           <div className="p-3 rounded-2xl bg-cyan-50 text-cyan-600 border border-cyan-100">
             <DollarSign className="w-6 h-6" />
+          </div>
+        </div>
+
+        <div className="glass-card p-5 rounded-2xl border border-slate-200 flex items-center justify-between">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Remaining Balance</p>
+            <p className={`text-2xl font-extrabold mt-1 ${remainingBudget < 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+              {formatCurrency(remainingBudget)}
+            </p>
+          </div>
+          <div className="p-3 rounded-2xl bg-amber-50 text-amber-600 border border-amber-100">
+            <Wallet className="w-6 h-6" />
           </div>
         </div>
       </div>
@@ -143,7 +160,7 @@ export default function DashboardPage({ onOpenNewTripModal }) {
             <p className="text-xs text-slate-500 max-w-sm mx-auto">Create your first multi-city trip itinerary with custom activities and budget tracking.</p>
             <button
               onClick={onOpenNewTripModal}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold shadow-md shadow-indigo-600/20 cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold shadow-md cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               Create First Trip
@@ -170,7 +187,6 @@ export default function DashboardPage({ onOpenNewTripModal }) {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent" />
                     
-                    {/* Destination Badges */}
                     <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
                       {trip.stops?.map((st) => (
                         <span key={st.id} className="px-2 py-0.5 rounded-full bg-white/90 backdrop-blur-md text-[10px] font-bold text-slate-800 border border-slate-200">
@@ -198,12 +214,11 @@ export default function DashboardPage({ onOpenNewTripModal }) {
                       {trip.description || 'No description provided.'}
                     </p>
 
-                    {/* Budget Progress */}
                     <div className="space-y-1">
                       <div className="flex justify-between text-xs font-semibold">
                         <span className="text-slate-500">Total Spent</span>
                         <span className={isOver ? 'text-rose-600 font-bold' : 'text-slate-800'}>
-                          ${spent.toFixed(2)} / ${trip.totalBudget.toFixed(2)}
+                          {formatCurrency(spent)} / {formatCurrency(trip.totalBudget)}
                         </span>
                       </div>
                       <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden border border-slate-200">
@@ -249,7 +264,6 @@ export default function DashboardPage({ onOpenNewTripModal }) {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent" />
                 
-                {/* Cost Index Badge */}
                 <div className="absolute top-3 left-3">
                   <span
                     className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider border backdrop-blur-md ${
@@ -264,7 +278,6 @@ export default function DashboardPage({ onOpenNewTripModal }) {
                   </span>
                 </div>
 
-                {/* Popularity Score */}
                 <div className="absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/90 text-amber-600 border border-slate-200 text-xs font-extrabold backdrop-blur-md">
                   <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
                   <span>{city.popularityScore}</span>
