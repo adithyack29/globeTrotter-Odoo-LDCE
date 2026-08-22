@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  avatarUrl    String?
+  language     String   @default("English")
+  createdAt    DateTime @default(now())
+
+  trips Trip[]
+}
+
+model Trip {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?
+  coverImageUrl String?
+  startDate     DateTime
+  endDate       DateTime
+  totalBudget   Float    @default(0.0)
+  isPublic      Boolean  @default(false)
+  shareSlug     String   @unique
+  createdAt     DateTime @default(now())
+
+  stops          TripStop[]
+  expenses       ExpenseItem[]
+  checklistItems TripChecklistItem[]
+}
+
+model City {
+  id              String   @id @default(uuid())
+  name            String
+  country         String
+  region          String
+  costIndex       String   // low, medium, high
+  popularityScore Float    @default(0.0)
+  imageUrl        String
+  description     String
+
+  activities Activity[]
+  tripStops  TripStop[]
+}
+
+model TripStop {
+  id            String   @id @default(uuid())
+  tripId        String
+  trip          Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  cityId        String
+  city          City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  orderIndex    Int
+  arrivalDate   DateTime
+  departureDate DateTime
+  stayCost      Float    @default(0.0)
+  transportCost Float    @default(0.0)
+
+  stopActivities StopActivity[]
+  expenses       ExpenseItem[]
+}
+
+model Activity {
+  id              String @id @default(uuid())
+  cityId          String
+  city            City   @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  name            String
+  category        String // Sightseeing, Food, Adventure, Culture, Leisure
+  cost            Float
+  durationMinutes Int
+  imageUrl        String
+  description     String
+
+  stopActivities StopActivity[]
+}
+
+model StopActivity {
+  id            String    @id @default(uuid())
+  tripStopId    String
+  tripStop      TripStop  @relation(fields: [tripStopId], references: [id], onDelete: Cascade)
+  activityId    String
+  activity      Activity  @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  scheduledDate DateTime?
+  scheduledTime String?
+  customCost    Float?
+  notes         String?
+  orderIndex    Int       @default(0)
+}
+
+model ExpenseItem {
+  id         String    @id @default(uuid())
+  tripId     String
+  trip       Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  tripStopId String?
+  tripStop   TripStop? @relation(fields: [tripStopId], references: [id], onDelete: SetNull)
+  category   String    // transport, stay, activity, meal, misc
+  amount     Float
+  date       DateTime  @default(now())
+  note       String?
+}
+
+model CurrencyRate {
+  code           String @id
+  symbol         String
+  rateAgainstUSD Float
+}
+
+model TripChecklistItem {
+  id          String  @id @default(uuid())
+  tripId      String
+  trip        Trip    @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  title       String
+  category    String  // Essentials, Packing, Adventure, Culture, Food, Documents
+  isCompleted Boolean @default(false)
+}
